@@ -45,6 +45,26 @@ class Remote(Module):
         env.copy("remote.cpp")
         env.copy("remote.hpp")
 
+class VTM(Module):
+    def init(self, module):
+        module.name = ":communication:serial:vtm"
+        module.description = "Remote control communication via VTM"
+
+    def prepare(self, module, options):
+        module.depends(":communication:gpio")
+        module.add_option(
+            StringOption(
+                name="uart_port",
+                description="Which uart port the VTM is connected to."))
+        return True
+
+    def build(self, env):
+        env.outbasepath = "taproot/src/tap/communication/serial"
+        env.substitutions = {"uart_port": env["uart_port"]}
+        env.template("vtm_serial_constants.hpp.in", "vtm_serial_constants.hpp")
+        env.copy("vtm.cpp")
+        env.copy("vtm.hpp")
+
 class RefSerial(Module):
     def init(self, module):
         module.name = ":communication:serial:ref_serial"
