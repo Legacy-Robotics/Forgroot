@@ -61,7 +61,7 @@ class VTM(Module):
     def build(self, env):
         env.outbasepath = "taproot/src/tap/communication/serial"
         env.substitutions = {"uart_port": env["uart_port"]}
-        env.template("vtm_serial_constants.hpp.in", "vtm_serial_constants.hpp")
+        env.template("vtm_constants.hpp.in", "vtm_constants.hpp")
         env.copy("vtm.cpp")
         env.copy("vtm.hpp")
 
@@ -123,6 +123,7 @@ def prepare(module, options):
     module.depends("taproot:core")
 
     module.add_submodule(Remote())
+    module.add_submodule(VTM())
     module.add_submodule(RefSerial())
     module.add_submodule(TerminalSerial())
 

@@ -30,7 +30,7 @@ def init(repo):
     repo.add_option(
         StringOption(
             name="project_name",
-            default="mcb-project",
+            default="Legacy_2023-project",
             description="Project name"))
 
     repo.add_option(

@@ -39,6 +39,7 @@ def prepare(module, options):
 
     # command mapper dependencies
     module.depends(":communication:serial:remote")
+    module.depends(":communication:serial:vtm")
 
     # power limiter dependencies
     module.depends(":communication:gpio:analog")
