@@ -30,7 +30,7 @@ using namespace tap::arch;
 
 namespace tap::communication::serial
 {
-VTM::VTM(Drivers* drivers)
+Vtm:Vtm(Drivers* drivers)
     : DJISerial(drivers, bound_ports::VTM_UART_PORT, false),
       vtm(),
       transmissionSemaphore(1)
@@ -38,13 +38,13 @@ VTM::VTM(Drivers* drivers)
     VTMOfflineTimeout.stop();
 }
 
-bool VTM::getVTMReceivingData() const
+bool Vtm:getVTMReceivingData() const
 {
     return !(VTMOfflineTimeout.isStopped() || VTMOfflineTimeout.isExpired());
 }
 
 //Todo: rename function
-void VTM::messageReceiveCallback(const ReceivedSerialMessage& completeMessage)
+void Vtm:messageReceiveCallback(const ReceivedSerialMessage& completeMessage)
 {
     VTMOfflineTimeout.restart(10000);
 
@@ -52,7 +52,7 @@ void VTM::messageReceiveCallback(const ReceivedSerialMessage& completeMessage)
 }
 
 //decode ref serial messages containing keyboard control data
-bool VTM::decodeVTMControl(const ReceivedSerialMessage& message)
+bool Vtm:decodeVTMControl(const ReceivedSerialMessage& message)
 {
     //parse incoming serial data
     if (message.header.dataLength != 12) return false;
@@ -86,12 +86,12 @@ bool VTM::decodeVTMControl(const ReceivedSerialMessage& message)
 }
 
 //return true if the key (k) is currently pressed
-bool VTM::getKey(Rx::Key k) {
+bool Vtm:getKey(Rx::Key k) {
     return static_cast<uint16_t>(k) & vtm.keys; 
 }
 
 //clears keyboard state and disables the robot
-void VTM::resetKeys() {
+void Vtm:resetKeys() {
     vtm.keys = 0;
     vtm.mouse.x = 0;
     vtm.mouse.y = 0;

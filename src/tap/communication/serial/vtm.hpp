@@ -35,7 +35,7 @@ namespace tap::communication::serial
  * Receive information from the referee serial by continuously calling `messageReceiveCallback`.
  * Access data sent by the referee serial by calling `getRobotData` or `getGameData`.
  */
-class VTM : public DJISerial
+class Vtm : public DJISerial
 {
 private:
     /**
@@ -61,9 +61,9 @@ public:
      *
      * @see `DjiSerial`
      */
-    VTM(Drivers* drivers);
-    DISALLOW_COPY_AND_ASSIGN(VTM)
-    mockable ~VTM() = default;
+    Vtm(Drivers* drivers);
+    DISALLOW_COPY_AND_ASSIGN(Vtm)
+    mockable ~Vtm() = default;
 
     enum class Key
     {

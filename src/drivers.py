@@ -103,7 +103,7 @@ DRIVERS_AND_MODULE_DEPENDENCIES = [
     },
     #todo: create mocks for vtm
     {
-        "object-name": "communication::serial::VTM",
+        "object-name": "communication::serial::Vtm",
         "mock-object-name": nice_mock("mock::RemoteMock"),
         "src-file": "tap/communication/serial/vtm.hpp",
         "mock-header": "tap/mock/remote_mock.hpp",
