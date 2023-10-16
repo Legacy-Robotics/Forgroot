@@ -40,16 +40,18 @@ DjiMotor::~DjiMotor() { drivers->djiMotorTxHandler.removeFromMotorManager(*this)
 DjiMotor::DjiMotor(
     Drivers* drivers,
     MotorId desMotorIdentifier,
-    tap::can::CanBus motorCanBus,
     bool isInverted,
     const char* name,
     uint16_t encoderWrapped,
-    int64_t encoderRevolutions)
-    : CanRxListener(drivers, static_cast<uint32_t>(desMotorIdentifier), motorCanBus),
+    int64_t encoderRevolutions,
+    MotorType motorType)
+    : CanRxListener(drivers, static_cast<uint32_t>(desMotorIdentifier), 
+        (motorType == MotorType::GM6020) ? tap::can::CanBus::CAN_BUS2 : tap::can::CanBus::CAN_BUS1),
       motorName(name),
+      motorType(motorType),
       drivers(drivers),
       motorIdentifier(desMotorIdentifier),
-      motorCanBus(motorCanBus),
+      motorCanBus((motorType == MotorType::GM6020) ? tap::can::CanBus::CAN_BUS2 : tap::can::CanBus::CAN_BUS1),
       desiredOutput(0),
       shaftRPM(0),
       temperature(0),
@@ -79,7 +81,15 @@ void DjiMotor::processMessage(const modm::can::Message& message)
     shaftRPM = motorInverted ? -shaftRPM : shaftRPM;
     torque = static_cast<int16_t>(message.data[4] << 8 | message.data[5]);  // torque
     torque = motorInverted ? -torque : torque;
-    temperature = static_cast<int8_t>(message.data[6]);  // temperature
+    if (motorType == MotorType::GM6020)
+    {
+        temperature = static_cast<int8_t>(message.data[6]);  // temperature
+    }
+    //no temperature on M2006
+    else
+    {
+        temperature = 0;
+    }
 
     // restart disconnect timer, since you just received a message from the motor
     motorDisconnectTimeout.restart(MOTOR_DISCONNECT_TIME);
@@ -108,7 +118,7 @@ bool DjiMotor::isMotorOnline() const
 
 void DjiMotor::serializeCanSendData(modm::can::Message* txMessage) const
 {
-    int id = DJI_MOTOR_TO_NORMALIZED_ID(this->getMotorIdentifier());  // number between 0 and 7
+    int id = this->getMotorIdentifierNum() - 1;  // number between 0 and 7
     // this method assumes you have choosen the correct message
     // to send the data in. Is blind to message type and is a private method
     // that I use accordingly.
@@ -120,7 +130,35 @@ void DjiMotor::serializeCanSendData(modm::can::Message* txMessage) const
 // getter functions
 int16_t DjiMotor::getOutputDesired() const { return desiredOutput; }
 
-uint32_t DjiMotor::getMotorIdentifier() const { return motorIdentifier; }
+uint32_t DjiMotor::getMotorIdentifier() const { 
+    if (motorType == MotorType::GM6020)
+    {
+        return motorIdentifier + GM6020_BASE_ID;
+    }
+    //M2006 + others
+    else 
+    {
+        return motorIdentifier + M2006_BASE_ID; 
+    }
+}
+
+uint8_t DjiMotor::getMotorIdentifierNum() const
+{
+    return motorIdentifier;
+}
+
+uint8_t DjiMotor::getMaxMotorID() const
+{
+    if (motorType == MotorType::GM6020)
+    {
+        return GM6020_MAX_MOTORS;
+    }
+    //M2006 + others
+    else 
+    {
+        return M2006_MAX_MOTORS;
+    }
+}
 
 int8_t DjiMotor::getTemperature() const { return temperature; }
 

@@ -33,24 +33,7 @@ class Drivers;
 
 namespace tap::motor
 {
-/**
- * Converts the dji MotorId to a uint32_t.
- * @param[in] id Some CAN MotorId
- * @return id normalized to be around [0, DJI_MOTORS_PER_CAN), or some value >= DJI_MOTORS_PER_CAN
- * if the id is out of bounds
- */
-#define DJI_MOTOR_TO_NORMALIZED_ID(id)                                                  \
-    static_cast<uint32_t>(                                                              \
-        (id < tap::motor::MOTOR1) ? (tap::motor::DjiMotorTxHandler::DJI_MOTORS_PER_CAN) \
-                                  : (id - tap::motor::MOTOR1))
 
-/**
- * Converts the dji MotorId to a uint32_t.
- * @param[in] idx Some index, a motor id index normalized between [0, DJI_MOTORS_PER_CAN)
- * @return idx, converted to a MotorId
- */
-#define NORMALIZED_ID_TO_DJI_MOTOR(idx) \
-    static_cast<tap::motor::MotorId>(idx + static_cast<int32_t>(tap::motor::MotorId::MOTOR1))
 
 /**
  * Uses modm can interface to send CAN packets to `DjiMotor`'s connected to the two CAN buses.
@@ -65,14 +48,14 @@ namespace tap::motor
 class DjiMotorTxHandler
 {
 public:
-    /** Number of motors on each CAN bus. */
-    static constexpr int DJI_MOTORS_PER_CAN = 8;
     /** CAN message length of each motor control message. */
     static constexpr int CAN_DJI_MESSAGE_SEND_LENGTH = 8;
     /** CAN message identifier for "low" segment (low 4 CAN motor IDs) of control message. */
-    static constexpr uint32_t CAN_DJI_LOW_IDENTIFIER = 0X200;
+    static constexpr uint32_t M2006_CAN_DJI_LOW_IDENTIFIER = 0X200;
+    static constexpr uint32_t GM6020_CAN_DJI_LOW_IDENTIFIER = 0X1FF;
     /** CAN message identifier for "high" segment (high 4 CAN motor IDs) of control message. */
-    static constexpr uint32_t CAN_DJI_HIGH_IDENTIFIER = 0X1FF;
+    static constexpr uint32_t M2006_CAN_DJI_HIGH_IDENTIFIER = 0X1FF;
+    static constexpr uint32_t GM6020_CAN_DJI_HIGH_IDENTIFIER = 0X2FF;
 
     DjiMotorTxHandler(Drivers* drivers) : drivers(drivers) {}
     mockable ~DjiMotorTxHandler() = default;
@@ -103,8 +86,8 @@ public:
 private:
     Drivers* drivers;
 
-    DjiMotor* can1MotorStore[DJI_MOTORS_PER_CAN] = {0};
-    DjiMotor* can2MotorStore[DJI_MOTORS_PER_CAN] = {0};
+    DjiMotor* can1MotorStore[M2006_MAX_MOTORS] = {0};
+    DjiMotor* can2MotorStore[GM6020_MAX_MOTORS] = {0};
 
     void addMotorToManager(DjiMotor** canMotorStore, DjiMotor* const motor);
 

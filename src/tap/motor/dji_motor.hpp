@@ -27,6 +27,15 @@
 
 #include "motor_interface.hpp"
 
+/**
+ * The base for determining which motor the message came from. GM6020, for example,
+ * motor 1 is 0x204 + 1 = 0x205
+ */
+#define GM6020_BASE_ID 0x204
+#define M2006_BASE_ID 0x200
+#define GM6020_MAX_MOTORS 7
+#define M2006_MAX_MOTORS 8
+
 namespace tap::motor
 {
 /**
@@ -37,15 +46,21 @@ namespace tap::motor
  */
 enum MotorId : uint32_t
 {
-    MOTOR1 = 0X201,
-    MOTOR2 = 0x202,
-    MOTOR3 = 0x203,
-    MOTOR4 = 0x204,
-    MOTOR5 = 0x205,
-    MOTOR6 = 0x206,
-    MOTOR7 = 0x207,
-    MOTOR8 = 0x208,
+    MOTOR1 = 1,
+    MOTOR2 = 2,
+    MOTOR3 = 3,
+    MOTOR4 = 4,
+    MOTOR5 = 5,
+    MOTOR6 = 6,
+    MOTOR7 = 7,
+    MOTOR8 = 8,
 };
+
+enum MotorType
+{
+    M2006,
+    GM6020
+}
 
 /**
  * A class designed to interface with DJI brand motors and motor controllers over CAN.
@@ -90,11 +105,11 @@ public:
     DjiMotor(
         Drivers* drivers,
         MotorId desMotorIdentifier,
-        tap::can::CanBus motorCanBus,
         bool isInverted,
         const char* name,
         uint16_t encoderWrapped = ENC_RESOLUTION / 2,
-        int64_t encoderRevolutions = 0);
+        int64_t encoderRevolutions = 0,
+        MotorType motorType);
 
     mockable ~DjiMotor();
 
@@ -144,7 +159,13 @@ public:
      */
     int16_t getOutputDesired() const override;
 
+    //returns the DJI motor protocol id, e.g. 0x201
     mockable uint32_t getMotorIdentifier() const;
+
+    //returns the motor ID, e.g. 1 (this is the value set on the controller)
+    uint8_t getMotorIdentifierNum() const;
+
+    uint8_t getMaxMotorID() const;
 
     /**
      * @return the temperature of the motor as reported by the motor in degrees Celsius
