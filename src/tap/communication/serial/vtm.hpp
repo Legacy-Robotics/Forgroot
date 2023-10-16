@@ -85,32 +85,12 @@ public:
         B
     };
 
-    enum class Key : uint16_t 
-    {
-        W = modm::Bit0,
-        S = modm::Bit1,
-        A = modm::Bit2,
-        D = modm::Bit3,
-        SHIFT = modm::Bit4,
-        CTRL = modm::Bit5,
-        Q = modm::Bit6,
-        E = modm::Bit7,
-        R = modm::Bit8,
-        F = modm::Bit9,
-        G = modm::Bit10,
-        Z = modm::Bit11,
-        X = modm::Bit12,
-        C = modm::Bit13,
-        V = modm::Bit14,
-        B = modm::Bit15
-    };
-
     /**
      * Handles the types of messages defined above in the RX message handlers section.
      */
     void messageReceiveCallback(const ReceivedSerialMessage& completeMessage) override;
 
-    mockable bool getRefSerialReceivingData() const;
+    mockable bool getVTMReceivingData() const;
 
     /**
      * Used by `RefSerialTransmitter`. It is necessary to acquire this lock to coordinate sending
@@ -139,11 +119,6 @@ public:
     mockable inline int16_t getMouseY() const { return vtm.mouse.y; }
 
     /**
-     * @return The current mouse z value.
-     */
-    mockable inline int16_t getMouseZ() const { return vtm.mouse.z; }
-
-    /**
      * @return The current mouse l value.
      */
     mockable inline bool getMouseL() const { return vtm.mouse.l; }
@@ -160,6 +135,8 @@ public:
     {
         return (vtm.key & (1 << static_cast<uint8_t>(key))) != 0;
     }
+
+    void resetKeys();
 private:
     Drivers *drivers;
     arch::MilliTimeout VTMOfflineTimeout;
