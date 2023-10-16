@@ -17,12 +17,12 @@
  * along with Taproot.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "ref_serial.hpp"
+#include "vtm.hpp"
 
 #include "tap/algorithms/crc.hpp"
 #include "tap/architecture/clock.hpp"
 #include "tap/architecture/endianness_wrappers.hpp"
-#include "tap/communication/serial/ref_serial_constants.hpp"
+#include "tap/communication/serial/vtm_constants.hpp"
 #include "tap/drivers.hpp"
 #include "tap/errors/create_errors.hpp"
 
@@ -32,36 +32,34 @@ namespace tap::communication::serial
 {
 VTM::VTM(Drivers* drivers)
     : DJISerial(drivers, bound_ports::VTM_UART_PORT, false),
-      VTMControlData(),
+      vtm(),
       transmissionSemaphore(1)
 {
     VTMOfflineTimeout.stop();
 }
 
-bool RefSerial::getVTMReceivingData() const
+bool VTM::getVTMReceivingData() const
 {
     return !(VTMOfflineTimeout.isStopped() || VTMOfflineTimeout.isExpired());
 }
 
 //Todo: rename function
-void RefSerial::messageReceiveCallback(const ReceivedSerialMessage& completeMessage)
+void VTM::messageReceiveCallback(const ReceivedSerialMessage& completeMessage)
 {
-    VTMOfflineTimeout.restart(TIME_OFFLINE_REF_DATA_MS);
+    VTMOfflineTimeout.restart(10000);
 
     decodeVTMControl(completeMessage);
 }
 
 //decode ref serial messages containing keyboard control data
-bool RefSerial::decodeVTMControl(const ReceivedSerialMessage& message)
+bool VTM::decodeVTMControl(const ReceivedSerialMessage& message)
 {
-    drivers->leds.set(tap::gpio::Leds::E, false);
-
     //parse incoming serial data
     if (message.header.dataLength != 12) return false;
 
-    convertFromLittleEndian(&VTMControlData.mouseX, message.data);
-    convertFromLittleEndian(&VTMControlData.mouseY, message.data + 2);
-    convertFromLittleEndian(&VTMControlData.mouseWheel, message.data + 4);
+    convertFromLittleEndian(&vtm.mouse.x, message.data);
+    convertFromLittleEndian(&vtm.mouse.y, message.data + 2);
+    convertFromLittleEndian(&vtm.mouse.wheel., message.data + 4);
     VTMControlData.mouseL = message.data[6];
     VTMControlData.mouseR = message.data[7];
     convertFromLittleEndian(&VTMControlData.keys, message.data + 8);
@@ -79,25 +77,27 @@ bool RefSerial::decodeVTMControl(const ReceivedSerialMessage& message)
     */
 
     //update command scheduler key states
-    drivers->commandMapper.handleKeyStateChange(VTMControlData.keys,
+    drivers->commandMapper.handleKeyStateChange(vtm.keys,
                                                 tap::communication::serial::Remote::SwitchState::UNKNOWN, 
                                                 tap::communication::serial::Remote::SwitchState::UNKNOWN,
-                                                VTMControlData.mouseL, VTMControlData.mouseR);
+                                                vtm.mouse.l, vtm.mouse.r);
 
-    drivers->leds.set(tap::gpio::Leds::E, true);
     return true;
 }
 
 //return true if the key (k) is currently pressed
-bool RefSerial::getKey(Rx::Key k) {
-    return static_cast<uint16_t>(k) & VTMControlData.keys; 
+bool VTM::getKey(Rx::Key k) {
+    return static_cast<uint16_t>(k) & vtm.keys; 
 }
 
 //clears keyboard state and disables the robot
-void RefSerial::resetKeys() {
-    VTMControlData.keys = 0;
-    VTMControlData.disableKeyPressed = false;
-    VTMControlData.controlDisabled = true;
+void VTM::resetKeys() {
+    vtm.keys = 0;
+    vtm.mouse.x = 0;
+    vtm.mouse.y = 0;
+    vtm.mouse.wheel = 0;
+    vtm.mouse.left = 0;
+    vtm.mouse.right = 0;
     drivers->commandMapper.handleKeyStateChange(0, tap::communication::serial::Remote::SwitchState::UNKNOWN,
         tap::communication::serial::Remote::SwitchState::UNKNOWN, false, false);
 }

@@ -1,6 +1,6 @@
 /* Copyright Legacy Robotics 2023*/
-#ifndef TAPROOT_REF_SERIAL_HPP_
-#define TAPROOT_REF_SERIAL_HPP_
+#ifndef TAPROOT_VTM_HPP_
+#define TAPROOT_VTM_HPP_
 
 #include <cstdint>
 #include <unordered_map>
@@ -12,7 +12,6 @@
 #include "modm/processing/protothread/semaphore.hpp"
 
 #include "dji_serial.hpp"
-#include "ref_serial_data.hpp"
 
 namespace tap
 {
@@ -36,7 +35,7 @@ namespace tap::communication::serial
  * Receive information from the referee serial by continuously calling `messageReceiveCallback`.
  * Access data sent by the referee serial by calling `getRobotData` or `getGameData`.
  */
-class VTM : public DJISerial, public RefSerialData
+class VTM : public DJISerial
 {
 private:
     /**
@@ -66,6 +65,46 @@ public:
     DISALLOW_COPY_AND_ASSIGN(VTM)
     mockable ~VTM() = default;
 
+    enum class Key
+    {
+        W = 0,
+        S,
+        A,
+        D,
+        SHIFT,
+        CTRL,
+        Q,
+        E,
+        R,
+        F,
+        G,
+        Z,
+        X,
+        C,
+        V,
+        B
+    };
+
+    enum class Key : uint16_t 
+    {
+        W = modm::Bit0,
+        S = modm::Bit1,
+        A = modm::Bit2,
+        D = modm::Bit3,
+        SHIFT = modm::Bit4,
+        CTRL = modm::Bit5,
+        Q = modm::Bit6,
+        E = modm::Bit7,
+        R = modm::Bit8,
+        F = modm::Bit9,
+        G = modm::Bit10,
+        Z = modm::Bit11,
+        X = modm::Bit12,
+        C = modm::Bit13,
+        V = modm::Bit14,
+        B = modm::Bit15
+    };
+
     /**
      * Handles the types of messages defined above in the RX message handlers section.
      */
@@ -92,42 +131,58 @@ public:
     /**
      * @return The current mouse x value.
      */
-    mockable inline int16_t getMouseX() const { return remote.mouse.x; }
+    mockable inline int16_t getMouseX() const { return vtm.mouse.x; }
 
     /**
      * @return The current mouse y value.
      */
-    mockable inline int16_t getMouseY() const { return remote.mouse.y; }
+    mockable inline int16_t getMouseY() const { return vtm.mouse.y; }
 
     /**
      * @return The current mouse z value.
      */
-    mockable inline int16_t getMouseZ() const { return remote.mouse.z; }
+    mockable inline int16_t getMouseZ() const { return vtm.mouse.z; }
 
     /**
      * @return The current mouse l value.
      */
-    mockable inline bool getMouseL() const { return remote.mouse.l; }
+    mockable inline bool getMouseL() const { return vtm.mouse.l; }
 
     /**
      * @return The current mouse r value.
      */
-    mockable inline bool getMouseR() const { return remote.mouse.r; }
+    mockable inline bool getMouseR() const { return vtm.mouse.r; }
 
     /**
      * @return `true` if the given `key` is pressed, `false` otherwise.
      */
     mockable inline bool keyPressed(Key key) const
     {
-        return (remote.key & (1 << static_cast<uint8_t>(key))) != 0;
+        return (vtm.key & (1 << static_cast<uint8_t>(key))) != 0;
     }
-
 private:
-    Rx::VTMControlData VTMControlData;
+    Drivers *drivers;
     arch::MilliTimeout VTMOfflineTimeout;
     modm::pt::Semaphore transmissionSemaphore;
 
     bool decodeVTMControl(const ReceivedSerialMessage& message);
+
+    struct VTMInfo
+    {
+        uint32_t updateCounter = 0;
+        /// Mouse information
+        struct
+        {
+            int16_t x = 0;
+            int16_t y = 0;
+            int16_t wheel = 0;
+            bool l = false;
+            bool r = false;
+        } mouse;
+        uint16_t key = 0;   ///< Keyboard information
+    };
+
+    VTMInfo vtm;
 };
 
 }  // namespace tap::communication::serial
