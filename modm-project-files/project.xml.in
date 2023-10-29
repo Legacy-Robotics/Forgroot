@@ -46,6 +46,7 @@
     <module>modm:platform:uart:6</module>
     <module>modm:platform:adc:1</module>
     <module>modm:platform:spi:1</module>
+    <module>modm:ros</module>
 %% if options[":dev_board"] == "rm-dev-board-a"
     <module>modm:platform:i2c:2</module>
     <module>modm:platform:timer:3</module>
