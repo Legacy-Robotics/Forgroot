@@ -33,9 +33,9 @@ namespace tap::motor
 void DjiMotorTxHandler::addMotorToManager(DjiMotor** canMotorStore, DjiMotor* const motor)
 {
     assert(motor != nullptr);
-    uint32_t idIndex = motor->getMotorIdentifierNum() - 1;
+    uint32_t idIndex = DJI_MOTOR_TO_NORMALIZED_ID(motor->getMotorIdentifier());
     bool motorOverloaded = canMotorStore[idIndex] != nullptr;
-    bool motorOutOfBounds = idIndex >= motor->getMaxMotorID() - 1;
+    bool motorOutOfBounds = idIndex >= DJI_MOTORS_PER_CAN;
     modm_assert(!motorOverloaded && !motorOutOfBounds, "DjiMotorTxHandler", "overloading");
     canMotorStore[idIndex] = motor;
 }
@@ -59,23 +59,22 @@ void DjiMotorTxHandler::encodeAndSendCanData()
 {
     // set up new can messages to be sent via CAN bus 1 and 2
     modm::can::Message can1MessageLow(
-        M2006_CAN_DJI_LOW_IDENTIFIER,
+        CAN_DJI_LOW_IDENTIFIER,
         CAN_DJI_MESSAGE_SEND_LENGTH,
         0,
         false);
     modm::can::Message can1MessageHigh(
-        M2006_CAN_DJI_HIGH_IDENTIFIER,
+        CAN_DJI_HIGH_IDENTIFIER,
         CAN_DJI_MESSAGE_SEND_LENGTH,
         0,
         false);
-    //GM6020 on CAN2 Alone
     modm::can::Message can2MessageLow(
-        GM6020_CAN_DJI_LOW_IDENTIFIER,
+        CAN_DJI_LOW_IDENTIFIER,
         CAN_DJI_MESSAGE_SEND_LENGTH,
         0,
         false);
     modm::can::Message can2MessageHigh(
-        GM6020_CAN_DJI_HIGH_IDENTIFIER,
+        CAN_DJI_HIGH_IDENTIFIER,
         CAN_DJI_MESSAGE_SEND_LENGTH,
         0,
         false);
@@ -90,16 +89,14 @@ void DjiMotorTxHandler::encodeAndSendCanData()
         &can1MessageLow,
         &can1MessageHigh,
         &can1ValidMotorMessageLow,
-        &can1ValidMotorMessageHigh,
-        MotorType::M2006);
+        &can1ValidMotorMessageHigh);
 
     serializeMotorStoreSendData(
         can2MotorStore,
         &can2MessageLow,
         &can2MessageHigh,
         &can2ValidMotorMessageLow,
-        &can2ValidMotorMessageHigh,
-        MotorType::GM6020);
+        &can2ValidMotorMessageHigh);
 
     bool messageSuccess = true;
 
@@ -137,19 +134,15 @@ void DjiMotorTxHandler::serializeMotorStoreSendData(
     modm::can::Message* messageLow,
     modm::can::Message* messageHigh,
     bool* validMotorMessageLow,
-    bool* validMotorMessageHigh,
-    MotorType motorType
-    )
+    bool* validMotorMessageHigh)
 {
-    uint8_t maxMotorID = (motorType == MotorType::GM6020) ? GM6020_MAX_MOTORS : M2006_MAX_MOTORS;
-    maxMotorID--; //decrememnt because we are zero indexing
-    for (uint8_t i = 0; i < maxMotorID; i++)
+    for (int i = 0; i < DJI_MOTORS_PER_CAN; i++)
     {
         const DjiMotor* const motor = canMotorStore[i];
         if (motor != nullptr)
         {
-
-            if (motor->getMotorIdentifierNum() <= 4)
+            if (DJI_MOTOR_TO_NORMALIZED_ID(motor->getMotorIdentifier()) <=
+                DJI_MOTOR_TO_NORMALIZED_ID(tap::motor::MOTOR4))
             {
                 motor->serializeCanSendData(messageLow);
                 *validMotorMessageLow = true;
@@ -177,9 +170,8 @@ void DjiMotorTxHandler::removeFromMotorManager(const DjiMotor& motor)
 
 void DjiMotorTxHandler::removeFromMotorManager(const DjiMotor& motor, DjiMotor** motorStore)
 {
-    //want to index at 0, so motor ID is offset by 1
-    uint32_t id = motor.getMotorIdentifierNum() - 1;
-    if (id > (motor.getMaxMotorID() - 1) || motorStore[id] == nullptr)
+    uint32_t id = DJI_MOTOR_TO_NORMALIZED_ID(motor.getMotorIdentifier());
+    if (id > DJI_MOTOR_TO_NORMALIZED_ID(tap::motor::MOTOR8) || motorStore[id] == nullptr)
     {
         RAISE_ERROR(drivers, "invalid motor id");
         return;
@@ -189,13 +181,13 @@ void DjiMotorTxHandler::removeFromMotorManager(const DjiMotor& motor, DjiMotor**
 
 DjiMotor const* DjiMotorTxHandler::getCan1Motor(MotorId motorId)
 {
-    uint32_t index = motorId - 1;
-    return index > M2006_MAX_MOTORS ? nullptr : can1MotorStore[index];
+    uint32_t index = DJI_MOTOR_TO_NORMALIZED_ID(motorId);
+    return index > DJI_MOTOR_TO_NORMALIZED_ID(tap::motor::MOTOR8) ? nullptr : can1MotorStore[index];
 }
 
 DjiMotor const* DjiMotorTxHandler::getCan2Motor(MotorId motorId)
 {
-    uint32_t index = motorId - 1;
-    return index > GM6020_MAX_MOTORS ? nullptr : can2MotorStore[index];
+    uint32_t index = DJI_MOTOR_TO_NORMALIZED_ID(motorId);
+    return index > DJI_MOTOR_TO_NORMALIZED_ID(tap::motor::MOTOR8) ? nullptr : can2MotorStore[index];
 }
 }  // namespace tap::motor
