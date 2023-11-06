@@ -8,12 +8,12 @@ namespace tap
 {
 namespace algorithms
 {
-SimplePid::SimplePid(const SimplePidConfig &pidConfig)
+SimplePID::SimplePID(const SimplePIDConfig &pidConfig)
     : config(pidConfig)
 {
 }
 
-float SimplePid::runController(float error, float errorDerivative, float dt)
+float SimplePID::runController(float error, float errorDerivative, float dt)
 {
     if (abs(error) < config.errDeadzone)
     {
@@ -41,7 +41,7 @@ float SimplePid::runController(float error, float errorDerivative, float dt)
     return output;
 }
 
-float SimplePid::runControllerDerivateError(float error, float dt)
+float SimplePID::runControllerDerivateError(float error, float dt)
 {
     if (compareFloatClose(dt, 0.0f, 1E-5))
     {
@@ -52,9 +52,9 @@ float SimplePid::runControllerDerivateError(float error, float dt)
     return runController(error, errorDerivative, dt);
 }
 
-float SimplePid::getOutput() { return output; }
+float SimplePID::getOutput() { return output; }
 
-void SimplePid::reset()
+void SimplePID::reset()
 {
     this->output = 0.0f;
     this->currErrorP = 0.0f;

@@ -7,7 +7,7 @@ namespace tap
 {
 namespace algorithms
 {
-class SimplePIDConfig
+struct SimplePIDConfig
 {
     float kp = 0.0f;
     float ki = 0.0f;
@@ -18,9 +18,10 @@ class SimplePIDConfig
                                         * error will be set to 0. */
     float errorDerivativeFloor = 0.0f; /**< Minimum error value at which the PID controller will
                                         * compute and apply the derivative term. */
-}
+};
 class SimplePID
 {
+public:
     SimplePID(const SimplePIDConfig &pidConfig);
 
     /**
@@ -57,6 +58,7 @@ private:
     float currErrorD = 0.0f;
     float output = 0.0f;
     float prevError = 0.0f;
-}
+};
 } //namespace algorithms
 } //namespace tap
+#endif
