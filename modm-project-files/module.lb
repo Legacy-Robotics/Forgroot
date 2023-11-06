@@ -35,7 +35,7 @@ DEFAULT_MODM_OPTIONS_BY_BOARD = {
         modm:platform:uart:3:buffer.rx 256\n\
         modm:platform:uart:6:buffer.rx 256\n\
         modm:platform:uart:6:buffer.tx 256\n\
-        modm:platform:uart:7:buffer.tx 256\n\
+        modm:platform:uart:7:buffer.tx 512\n\
         modm:platform:uart:7:buffer.rx 512\n\
         modm:platform:uart:8:buffer.tx 256\n\
         modm:platform:uart:8:buffer.rx 256",

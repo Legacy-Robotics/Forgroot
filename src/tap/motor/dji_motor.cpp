@@ -126,7 +126,7 @@ int8_t DjiMotor::getTemperature() const { return temperature; }
 
 int16_t DjiMotor::getTorque() const { return torque; }
 
-int16_t DjiMotor::getShaftRPM() const { return shaftRPM; }
+int16_t DjiMotor::getShaftRPM() const { return shaftRPM / 36; }
 
 bool DjiMotor::isMotorInverted() const { return motorInverted; }
 
