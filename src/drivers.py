@@ -101,7 +101,15 @@ DRIVERS_AND_MODULE_DEPENDENCIES = [
         "constructor": "this",
         "module-dependencies": [":communication:serial:ref_serial"],
     },
-    #todo: create mocks for vtm
+    #todo: create mocks for vtm/ros
+    {
+        "object-name": "communication::serial::Ros",
+        "mock-object-name": nice_mock("mock::Ros"),
+        "src-file": "tap/communication/serial/ros.hpp",
+        "mock-header": "tap/mock/remote_mock.hpp",
+        "constructor": "this",
+        "module-dependencies": [":communication:serial:ros"],
+    },
     {
         "object-name": "communication::serial::Vtm",
         "mock-object-name": nice_mock("mock::RemoteMock"),
